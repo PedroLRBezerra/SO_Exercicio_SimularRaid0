@@ -18,7 +18,7 @@ import java.awt.event.MouseEvent;
 public class DisksUsageView extends JFrame {
 
 	private JPanel contentPane;
-	private int altura;
+	private int sizeFile;
 	JTable disksTables [];
 	
 
@@ -55,7 +55,7 @@ public class DisksUsageView extends JFrame {
 		btnEnviarArquivo.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				sendFileSize();
+				sendFileSize(qtyDisks);
 			}
 		});
 		btnEnviarArquivo.setBounds(900, qtyDisks*90, 150, 25);
@@ -64,8 +64,37 @@ public class DisksUsageView extends JFrame {
 		setBounds(100, 100, 1200, (qtyDisks*120));
 	}
 	
-	private void sendFileSize() {
+	private void sendFileSize(int qtyDisks ) {
+		sizeFile = Integer.parseInt(JOptionPane.showInputDialog("Digite o tamanho do arquivo"));
+		int sizeNeeded=sizeFile;
+		int [][] disks=new int [qtyDisks][32]; 
+		int sectorsNeeded =(int)Math.ceil(((Double.valueOf(sizeFile)/Double.valueOf(32))/qtyDisks));
+		for (int sectors = 0; sectors < sectorsNeeded; sectors++) {
+			for(int diskInput=0;diskInput<qtyDisks;diskInput++) {
+				if(sizeNeeded>=32) {
+					disks[diskInput][sectors]=32;
+					sizeNeeded-=32;
+				}else {
+					disks[diskInput][sectors]=sizeNeeded;
+					sizeNeeded=0;
+				}
+			}
+		}
+		AnimationchangingJTable(sectorsNeeded, disks);
 		
+	}
+	
+	private void AnimationchangingJTable(int sectorsNeeded , int [][] disks) {
+		for(int sectors=0;sectors<sectorsNeeded;sectors++) {
+			for(int jTableUpdate=0;jTableUpdate<disks.length;jTableUpdate++) {
+				this.disksTables[jTableUpdate].setValueAt(disks[jTableUpdate][sectors]+"/32", 0, sectors);
+				this.disksTables[jTableUpdate].changeSelection(0, jTableUpdate, false,false);		
+			}
+			JOptionPane.showMessageDialog(null,"Inserido no bloco "+sectors+ " dos "+this.disksTables.length+" Discos","inserção Realizada com Sucesso", JOptionPane.YES_OPTION);
+		}
+		for(int jTableUpdate=0;jTableUpdate<disks.length;jTableUpdate++) {
+			this.disksTables[jTableUpdate].clearSelection();
+		}
 	}
 
 	public void addDisks(int qtyDisk) {
@@ -78,6 +107,7 @@ public class DisksUsageView extends JFrame {
 			disksTables[disk]=new JTable(createRow(32),createColumnNames(32));
 			rollBar[disk] = new JScrollPane(disksTables[disk]);
 			rollBar[disk].setBounds(70,((disk)*70), 1100, 50);
+			this.disksTables[disk].setSelectionBackground(Color.RED);
 			this.contentPane.add(rollBar[disk]);
 			this.contentPane.add(lblDisk[disk]);
 		}
